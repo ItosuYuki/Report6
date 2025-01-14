@@ -1,5 +1,6 @@
 package jp.ac.uryukyu.ie.e245708;
 
+
 public class Technique {
     String techniqueName; //技名
     String cla; //物理、特殊、変化技の区分

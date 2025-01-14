@@ -1,5 +1,6 @@
 package jp.ac.uryukyu.ie.e245708;
 
+
 public class Pokemon {
     String pokemonName;                                 //ポケモン名
     String[] type;                                      //タイプ
@@ -61,86 +62,26 @@ public class Pokemon {
         this.nature = nature;
         double aNat = 1.0, bNat = 1.0, cNat = 1.0, dNat = 1.0, sNat = 1.0; //性格補正値
         switch(nature){ //性格補正
-            case "さみしがり":
-                aNat = 1.1;
-                cNat = 0.9;
-                break;
-            case "いじっぱり":
-                aNat = 1.1;
-                bNat = 0.9;
-                break;
-            case "やんちゃ":
-                aNat = 1.1;
-                cNat = 0.9;
-                break;
-            case "ゆうかん":
-                aNat = 1.1;
-                dNat = 0.9;
-                break;
-            case "ずぶとい":
-                bNat = 1.1;
-                aNat = 0.9;
-                break;
-            case "わんぱく":
-                bNat = 1.1;
-                cNat = 0.9;
-                break;
-            case "のうてんき":
-                bNat = 1.1;
-                dNat = 0.9;
-                break;
-            case "のんき":
-                bNat = 1.1;
-                sNat = 0.9;
-                break;
-            case "ひかえめ":
-                cNat = 1.1;
-                aNat = 0.9;
-                break;
-            case "おっとり":
-                cNat = 1.1;
-                bNat = 0.9;
-                break;
-            case "うっかりや":
-                cNat = 1.1;
-                dNat = 0.9;
-                break;
-            case "れいせい":
-                cNat = 1.1;
-                sNat = 0.9;
-                break;
-            case "おだやか":
-                dNat = 1.1;
-                aNat = 0.9;
-                break;
-            case "おとなしい":
-                dNat = 1.1;
-                bNat = 0.9;
-                break;
-            case "しんちょう":
-                dNat = 1.1;
-                cNat = 0.9;
-                break;
-            case "なまいき":
-                dNat = 1.1;
-                sNat = 0.9;
-                break;
-            case "おくびょう":
-                sNat = 1.1;
-                aNat = 0.9;
-                break;
-            case "せっかち":
-                sNat = 1.1;
-                bNat = 0.9;
-                break;
-            case "ようき":
-                sNat = 1.1;
-                cNat = 0.9;
-                break;
-            case "むじゃき":
-                sNat = 1.1;
-                dNat = 0.9;
-                break;
+            case "さみしがり": aNat = 1.1; cNat = 0.9; break;
+            case "いじっぱり": aNat = 1.1; bNat = 0.9; break;
+            case "やんちゃ": aNat = 1.1; cNat = 0.9; break;
+            case "ゆうかん": aNat = 1.1; dNat = 0.9; break;
+            case "ずぶとい": bNat = 1.1; aNat = 0.9; break;
+            case "わんぱく": bNat = 1.1; cNat = 0.9; break;
+            case "のうてんき": bNat = 1.1; dNat = 0.9; break;
+            case "のんき": bNat = 1.1; sNat = 0.9; break;
+            case "ひかえめ": cNat = 1.1; aNat = 0.9; break;
+            case "おっとり": cNat = 1.1; bNat = 0.9; break;
+            case "うっかりや": cNat = 1.1; dNat = 0.9; break;
+            case "れいせい": cNat = 1.1; sNat = 0.9; break;
+            case "おだやか": dNat = 1.1; aNat = 0.9; break;
+            case "おとなしい": dNat = 1.1; bNat = 0.9; break;
+            case "しんちょう": dNat = 1.1; cNat = 0.9; break;
+            case "なまいき": dNat = 1.1; sNat = 0.9; break;
+            case "おくびょう": sNat = 1.1; aNat = 0.9; break;
+            case "せっかち": sNat = 1.1; bNat = 0.9; break;
+            case "ようき": sNat = 1.1; cNat = 0.9;  break;
+            case "むじゃき": sNat = 1.1; dNat = 0.9; break;
         };
         this.maxHP = (hRace * 2 + hIndi + hEffo / 4) * level / 100 + level + 10;
         this.aReal = (int)((int)((int)(this.aRace + 2 + aIndi + aEffo / 4) * level / 100 + 5) * aNat);
