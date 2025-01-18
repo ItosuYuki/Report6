@@ -1,7 +1,5 @@
 package jp.ac.uryukyu.ie.e245708;
-
 import java.util.Random;
-import java.util.Scanner;
 
 public abstract class Trainer {
     String trainerName;    //トレーナー名
@@ -19,6 +17,5 @@ public abstract class Trainer {
         this.numRemPokemon = party.length;
     }
 */
-    abstract Technique choiceTechnique();
-    abstract void abnCon();
+    //abstract Technique choiceTechnique();
 }

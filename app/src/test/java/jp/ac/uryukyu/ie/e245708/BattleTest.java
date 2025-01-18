@@ -1,5 +1,5 @@
-package app.src.test.java.jp.ac.uryukyu.ie.e245708;
+package jp.ac.uryukyu.ie.e245708;
 
-public class BattleTest {
+class BattleTest {
     
 }

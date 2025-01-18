@@ -1,6 +1,6 @@
 package jp.ac.uryukyu.ie.e245708;
-
 import java.util.Scanner;
+import java.util.Arrays;
 
 public class Player extends Trainer{
     //コンストラクタ
@@ -11,7 +11,8 @@ public class Player extends Trainer{
         this.numRemPokemon = party.length;
     }
 
-    public void choiceCommand() {
+    public String choiceCommand() {
+        System.out.println(this.battlePokemon.pokemonName + "は どうする？");
         String[] commandList = new String[]{"たたかう", "ポケモン", "にげる"};
         int index = 0;
         for(String command: commandList){
@@ -19,186 +20,121 @@ public class Player extends Trainer{
             index ++;
         }
         Scanner scanner = new Scanner(System.in);
-        System.out.print("コマンド選択");
         int choice = scanner.nextInt();
-        switch (choice) {
-            case 0: // たたかう
-                choiceTechnique();
-                break;
-            case 1: // ポケモン
-                showParty();
-                break;
-            case 2: // にげる
-                runAway();
-                break;
-            default:
-                System.out.println("無効なコマンドです。");
-                choiceCommand();
-        }
+        return commandList[choice];
     }
+    
 
-    @Override
-    public Technique choiceTechnique(){
+    //@Override
+    public int choiceTechnique(){ //たたかう
+        System.out.println(this.battlePokemon.pokemonName + "は どうする？");
         displayCommand(battlePokemon.techniques);
         Scanner scanner = new Scanner(System.in);
-        System.out.print("コマンド選択");
         int choice = scanner.nextInt();
         if(0 <= choice && choice < battlePokemon.techniques.length){
+            if(battlePokemon.techniques[choice].PP == 0){
+                System.out.println("PPがたりません!");
+                choice = 5;//技選択に戻る
+            }else if(battlePokemon.techniques[choice].effect == "100%の確率で相手をひるませる。ただし、出た最初のターンしか成功しない。"
+            && battlePokemon.elaTurn != 1){
+             System.out.println("その技は 使用できません!");
+             choice = 5;//技選択に戻る
+            }
         }else if(choice == battlePokemon.techniques.length){
-            choiceCommand(); //もどる
+            //もどる
         }else{
-            System.out.println("無効なコマンドです。");
-            choiceTechnique();
+            System.out.println("無効なコマンドです。");//技選択に戻る
         }
-        Technique choiceTechnique = battlePokemon.techniques[choice];
-        return choiceTechnique;
+        return choice;
     }
-    public Pokemon showParty(){
+    public int showParty(){ //ポケモン
+        if(this.battlePokemon.abnCon != "ひんし"){
+            System.out.println(this.battlePokemon.pokemonName + "は どうする？");
+        }
         displayCommand(this.party);
         Scanner scanner1 = new Scanner(System.in);
-        System.out.print("コマンド選択");
         int choice1 = scanner1.nextInt();
         if(0 <= choice1 && choice1 < this.party.length){
         }else if(choice1 == this.party.length){
-            choiceCommand(); //もどる
+            //choiceCommand(); //戻る
         }else{
-            System.out.println("無効なコマンドです。");
-            showParty();;
+            System.out.println("無効なコマンドです。"); //戻る
         }
-        Pokemon choicePokemon = this.party[choice1];
-        return choicePokemon;
+        return choice1;
     }
 
-    public void showPokemon(Pokemon choicePokemon) {
-        System.out.println("タイプ :" + choicePokemon.types);
+    public String showPokemon(Pokemon choicePokemon) {
+        System.out.println(choicePokemon.pokemonName + choicePokemon.abnCon);
+        System.out.println("タイプ :" + Arrays.toString(choicePokemon.types));
         System.out.print("HP :" + choicePokemon.hReal + "/" + choicePokemon.maxHP);
-        System.out.print("こうげき :" + choicePokemon.aReal);
-        System.out.println("ぼうぎょ :" + choicePokemon.bReal);
+        System.out.print("  こうげき :" + choicePokemon.aReal);
+        System.out.println("  ぼうぎょ :" + choicePokemon.bReal);
         System.out.print("とくこう :" + choicePokemon.cReal);
-        System.out.print("とくぼう :" + choicePokemon.dReal);
-        System.out.println("すばやさ :" + choicePokemon.sReal);
+        System.out.print("  とくぼう :" + choicePokemon.dReal);
+        System.out.println("  すばやさ :" + choicePokemon.sReal);
         for(Technique tecnique:choicePokemon.techniques){
             System.out.println(tecnique.techniqueName + "PP: " + tecnique.PP + "/" + tecnique.maxPP);
         }
-        if(this.battlePokemon == choicePokemon | choicePokemon.abnCon == 7){
+        if(this.battlePokemon == choicePokemon | choicePokemon.abnCon == "ひんし"){
+            if(this.battlePokemon.abnCon != "ひんし"){
+                System.out.println(this.battlePokemon.pokemonName + "は どうする？");
+            }
             String[] commandList = {"もどる"};
             displayCommand(commandList);
             Scanner scanner2 = new Scanner(System.in);
-            System.out.print("コマンド選択");
             int choice2 = scanner2.nextInt();
             switch(choice2){
                 case 0:
-                    showParty(); //もどるコマンド
-                    break;
+                    return "もどる";
                 default:
                     System.out.println("無効なコマンドです。");
-                    showPokemon(choicePokemon);
+                    //showPokemon(choicePokemon);
+                    return "";
 
             }
         }else{
-            String[] commandList = {"こうかん", "もどる"};
+            if(this.battlePokemon.abnCon != "ひんし"){
+                System.out.println(this.battlePokemon.pokemonName + "は どうする？");
+            }
+            String[] commandList = {"いれかえる", "もどる"};
             displayCommand(commandList);
             Scanner scanner2 = new Scanner(System.in);
-            System.out.print("コマンド選択");
             int choice2 = scanner2.nextInt();
             switch(choice2){
                 case 0:
-                    exchange(this.party[choice2]);
-                    break;
+                    return "いれかえる";
                 case 1:
-                    showParty(); //もどるコマンド
-                    break;
+                    return "もどる";
                 default:
                     System.out.println("無効なコマンドです。");
-                    showParty();
+                    return "";
             }
         }
     }
 
     public void exchange(Pokemon choicePokemon){
-        if(this.battlePokemon.abnCon == 7){ //ひんしの時
+        if(this.battlePokemon.abnCon.equals("ひんし") ){
         }else{
-        System.out.println(this.battlePokemon + " 戻れ！");
+        System.out.println(this.battlePokemon.pokemonName + " 戻れ！");
         }
         this.battlePokemon = choicePokemon;
-        System.out.println("ゆけっ!" + this.battlePokemon + "!");
+        System.out.println("ゆけっ!" + this.battlePokemon.pokemonName + "!");
+        this.battlePokemon.act = false;
     }
     
-    public void runAway(){
+    public String runAway(){ //にげる
         System.out.println("勝負を あきらめて 降参しますか？");
         displayCommand(new String[]{"はい", "いいえ"});
         Scanner scanner = new Scanner(System.in);
-        System.out.print("コマンド選択");
         int choice = scanner.nextInt();
         switch(choice){
             case 0:
-                System.out.println("降参が 選ばれました");
-                System.exit(0);
-                break;
+                return "はい";
             case 1:
-                choiceCommand(); //もどるコマンド
-                break;
+                return "いいえ";
             default:
                 System.out.println("無効なコマンドです。");
-                runAway();
-        }
-    }
-
-    @Override
-    void abnCon(){
-        switch(battlePokemon.abnCon){
-            case 1://まひ
-                battlePokemon.sReal = (int)(battlePokemon.sReal / 2);
-                int rand1 = randomGenerator.nextInt(99) + 1;
-                if(rand1 < 25){
-                    //行動不能　後で実装
-                    System.out.println(battlePokemon.pokemonName + "は からだ がしびれて うごけない!");
-                }
-                break;
-            case 2://こおり
-                int rand2 = randomGenerator.nextInt(99) + 1;
-                if(rand2 < 20){
-                    System.out.println(battlePokemon.pokemonName + "のこおりがとけた");
-                    battlePokemon.abnCon = 0;
-                 }else{
-                     //行動不能　後で実装
-                     System.out.println(battlePokemon.pokemonName + "は こおってしまってうごけない");
-                  }
-                break;
-            case 3://やけど
-                //物理技のダメージ1/2 useTechniqueメソッドで実装
-                battlePokemon.damaged((int)(battlePokemon.maxHP / 8));
-                break;
-            case 4://どく
-                battlePokemon.damaged((int)(battlePokemon.maxHP / 8));
-                break;
-            case 5://もうどく
-                battlePokemon.damaged((int)(battlePokemon.maxHP * battlePokemon.elaTurn / 16)); //経過ターン数を数える部分を後で作成する
-                battlePokemon.elaTurn ++;
-                break;
-            case 6://ねむり
-                if(battlePokemon.sleepCount == 0){
-                battlePokemon.sleepCount = randomGenerator.nextInt(2) + 2; //ねむりカウント
-                }
-                if(battlePokemon.sleepCount == 0){
-                    battlePokemon.abnCon = 0;
-                    System.out.println(battlePokemon.pokemonName + "はめをさました!");
-                }else{
-                    //行動不能　後で実装
-                    System.out.println(battlePokemon.pokemonName + "はぐうぐうねむっている");
-                    battlePokemon.sleepCount -= 1;
-                }
-                break;
-            case 7://ひんし ポケモンを場に出せなくなる
-                this.numRemPokemon --;
-                if(this.numRemPokemon == 0){
-                    System.out.println(this.trainerName + "の てもとには たたかえる ポケモンが いない!");
-                    System.out.println("…… …… ……");
-                    System.out.println("めのまえが まっくらに なった!");
-                    System.exit(0);
-                }
-                showParty();
-                break;
+                return "";
         }
     }
 
@@ -208,14 +144,18 @@ public class Player extends Trainer{
             if(item instanceof String){
                 System.out.println(index + ": " + item);
             } else if(item instanceof Pokemon){
-                System.out.println(index + ": " + ((Pokemon)item).pokemonName);
+                System.out.println(index + ": " + ((Pokemon)item).pokemonName + " " + ((Pokemon)item).abnCon);
             } else if(item instanceof Technique){
-                System.out.println(index + ": " + ((Technique)item).techniqueName);
+                System.out.println(index + ": " + ((Technique)item).techniqueName + " " + ((Technique)item).type + " " + ((Technique)item).PP + "/" + ((Technique)item).maxPP);
             } else {
                 System.out.println(index + ": " + item.toString());
             }
             index++;
         }
-        System.out.println("もどる");
+        if(commandList instanceof String[]){
+        }else{
+        System.out.println(index + ": もどる");
+        }
     }
+
 }

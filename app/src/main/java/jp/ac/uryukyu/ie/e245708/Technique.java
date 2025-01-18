@@ -1,6 +1,5 @@
 package jp.ac.uryukyu.ie.e245708;
 
-
 public class Technique {
     String techniqueName; //技名
     String cla; //物理、特殊、変化技の区分
@@ -11,7 +10,9 @@ public class Technique {
     boolean direct; //接触技か否か 接触の場合True
     String type; //タイプ
     int priority; //優先度
-    int effect; //技効果
+    String effect; //技効果
+    
+    //コンストラクタ
     Technique(
         String techniqueName,
         String cla,
@@ -21,13 +22,14 @@ public class Technique {
         boolean direct, 
         String type, 
         int priority, 
-        int effect 
+        String effect 
     ){
         this.techniqueName =techniqueName;
         this.cla = cla;
         this.pwr = pwr;
         this.acc = acc;
         this.maxPP = maxPP;
+        this.PP = maxPP;
         this.direct = direct;
         this.type = type;
         this.priority = priority;
