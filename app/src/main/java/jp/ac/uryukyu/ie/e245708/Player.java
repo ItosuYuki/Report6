@@ -3,6 +3,8 @@ import java.util.Scanner;
 import java.util.Arrays;
 
 public class Player extends Trainer{
+    Scanner scanner = new Scanner(System.in);
+
     //コンストラクタ
     Player(String trainerName, Pokemon[] party){
         this.trainerName = trainerName;
@@ -19,9 +21,13 @@ public class Player extends Trainer{
             System.out.println(index + ": " + command);
             index ++;
         }
-        Scanner scanner = new Scanner(System.in);
         int choice = scanner.nextInt();
-        return commandList[choice];
+        if(0 <= choice && choice <= commandList.length - 1) {
+            return commandList[choice];
+        }else{
+            System.out.println("無効なコマンドです。");
+            return "";
+        }
     }
     
 
@@ -29,7 +35,6 @@ public class Player extends Trainer{
     public int choiceTechnique(){ //たたかう
         System.out.println(this.battlePokemon.pokemonName + "は どうする？");
         displayCommand(battlePokemon.techniques);
-        Scanner scanner = new Scanner(System.in);
         int choice = scanner.nextInt();
         if(0 <= choice && choice < battlePokemon.techniques.length){
             if(battlePokemon.techniques[choice].PP == 0){
@@ -52,8 +57,7 @@ public class Player extends Trainer{
             System.out.println(this.battlePokemon.pokemonName + "は どうする？");
         }
         displayCommand(this.party);
-        Scanner scanner1 = new Scanner(System.in);
-        int choice1 = scanner1.nextInt();
+        int choice1 = scanner.nextInt();
         if(0 <= choice1 && choice1 < this.party.length){
         }else if(choice1 == this.party.length){
             //choiceCommand(); //戻る
@@ -81,8 +85,7 @@ public class Player extends Trainer{
             }
             String[] commandList = {"もどる"};
             displayCommand(commandList);
-            Scanner scanner2 = new Scanner(System.in);
-            int choice2 = scanner2.nextInt();
+            int choice2 = scanner.nextInt();
             switch(choice2){
                 case 0:
                     return "もどる";
@@ -98,8 +101,7 @@ public class Player extends Trainer{
             }
             String[] commandList = {"いれかえる", "もどる"};
             displayCommand(commandList);
-            Scanner scanner2 = new Scanner(System.in);
-            int choice2 = scanner2.nextInt();
+            int choice2 = scanner.nextInt();
             switch(choice2){
                 case 0:
                     return "いれかえる";
@@ -117,15 +119,16 @@ public class Player extends Trainer{
         }else{
         System.out.println(this.battlePokemon.pokemonName + " 戻れ！");
         }
+        this.battlePokemon.conTurn = 0;
         this.battlePokemon = choicePokemon;
         System.out.println("ゆけっ!" + this.battlePokemon.pokemonName + "!");
         this.battlePokemon.act = false;
+        this.battlePokemon.elaTurn =0;
     }
     
     public String runAway(){ //にげる
         System.out.println("勝負を あきらめて 降参しますか？");
         displayCommand(new String[]{"はい", "いいえ"});
-        Scanner scanner = new Scanner(System.in);
         int choice = scanner.nextInt();
         switch(choice){
             case 0:

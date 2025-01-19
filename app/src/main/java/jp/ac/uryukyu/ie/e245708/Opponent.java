@@ -14,38 +14,25 @@ public class Opponent extends Trainer{
     Random randomGenerator = new Random();
 
     //@Override
-    public Technique choiceTechnique(){
+    public Technique choiceTechnique(Pokemon target){
         int damage = 0;
         Technique choiceTechnique = battlePokemon.techniques[0];
         for(Technique technique: battlePokemon.techniques){
-            double typeMachCom = 1; //タイプ一致補正
-            for(String type: battlePokemon.types){
-                if(technique.type == type){
-                    typeMachCom = 1.5;
-                }
+            int damage1 = battlePokemon.calcDamage(technique, target);
+            if(damage1 >= damage){
+                damage = damage1;
+                choiceTechnique = technique;
             }
-            switch(technique.cla){
-                case "物理":
-                    int damage1 = (int)(technique.pwr * battlePokemon.aReal * typeMachCom);
-                    if(battlePokemon.abnCon == "やけど"){ //やけど時ダメージ1/2
-                        damage1 = damage1 / 2;
-                    }
-                    if(damage1 >= damage){
-                        damage = damage1;
-                        choiceTechnique = technique;
-                    }
-                    break;
-                case "特殊":
-                    int damage2 = (int)(technique.pwr * battlePokemon.cReal * typeMachCom);
-                    if(damage2 >= damage){
-                        damage = damage2;
-                        choiceTechnique = technique;
-                    }
-                    break;
-            }
-        }   
-        return choiceTechnique;
+        }
+        if(battlePokemon.outrageTurn > 0){
+            return battlePokemon.lastUsedTechnique != null
+                ? battlePokemon.lastUsedTechnique
+                : battlePokemon.techniques[0];
+        }else{
+            return choiceTechnique;
+        }
     }
+    
 
     public void exchange() {
         boolean found = false;

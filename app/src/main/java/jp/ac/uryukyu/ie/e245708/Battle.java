@@ -1,11 +1,28 @@
 package jp.ac.uryukyu.ie.e245708;
-import java.util.Random;
 
 public class Battle {
-    //乱数生成
-    Random randomGenerator = new Random();
+    Player player;
+    Opponent opponent;
+    GameDisplay gameDisplay;
 
-    public static void checkNumRemPokemon(Player player, Opponent opponent) {
+
+    void initializeTurn(Player player, Opponent opponent) {
+        player.battlePokemon.act = true;
+        opponent.battlePokemon.act = true;
+        player.battlePokemon.beforeAct = true;
+        player.battlePokemon.afterAct = false;
+        opponent.battlePokemon.beforeAct = true;
+        opponent.battlePokemon.afterAct = false;
+    }
+
+    void finalizeTurn(Player player, Opponent opponent) {
+        player.battlePokemon.beforeAct = false;
+        player.battlePokemon.afterAct = true;
+        opponent.battlePokemon.beforeAct = false;
+        opponent.battlePokemon.afterAct = true;
+    }
+
+    public void checkNumRemPokemon(Player player, Opponent opponent) {
         if(player.battlePokemon.abnCon == "ひんし"){
             player.battlePokemon.act = false;
             player.numRemPokemon --;
@@ -27,8 +44,8 @@ public class Battle {
             }
         }
         if(opponent.battlePokemon.abnCon == "ひんし"){
-            opponent.numRemPokemon --;
             opponent.battlePokemon.act = false;
+            opponent.numRemPokemon --;
             if(opponent.numRemPokemon == 0){
                 System.out.println(opponent.trainerName + "とのしょうぶにかった!");
                 System.exit(0);
@@ -37,8 +54,149 @@ public class Battle {
         }   
     }
 
+    boolean handlePlayerCommand(Player player, Opponent opponent, GameDisplay gameDisplay, Technique opChoiceTechnique) {
+        while (true) {
+            String command = player.choiceCommand();
+            if (command.equals("にげる") && confirmRunAway(player)) return true;
+            if (command.equals("ポケモン") && handlePokemonSwitch(player, opponent, gameDisplay, opChoiceTechnique)) return true;
+            if (command.equals("たたかう") && handleTechniqueSwitch(player, opponent, opChoiceTechnique)) return false;
+        }
+    }
 
-    public static void main(String[] args) {
+    boolean confirmRunAway(Player player) {
+        while (true) {
+            String confirm = player.runAway();
+            if (confirm.equals("はい")) {
+                System.out.println("降参が 選ばれました");
+                System.exit(0);
+            } else if (confirm.equals("いいえ")) return false;
+        }
+    }
+
+    boolean handlePokemonSwitch(Player player, Opponent opponent, GameDisplay gameDisplay, Technique opChoiceTechnique) {
+        while (true) {
+            int choicePokemonIndex = player.showParty();
+            if (choicePokemonIndex == player.party.length) return false; // 戻る
+            if(0 <= choicePokemonIndex | choicePokemonIndex <= player.party.length - 1){
+                Pokemon choicePokemon = player.party[choicePokemonIndex];
+                while (true) {
+                    String command = player.showPokemon(choicePokemon);
+                    if (command.equals("いれかえる")) {
+                        player.exchange(choicePokemon);
+                        gameDisplay.gameDisplay(player, opponent);
+                        opponent.battlePokemon.useTechnique(opChoiceTechnique, player.battlePokemon);
+                        checkNumRemPokemon(player, opponent);
+                        return true;
+                    } else if (command.equals("もどる")) break;
+                }
+            }
+        }
+    }
+
+    boolean handleTechniqueSwitch(Player player, Opponent opponent, Technique opChoiceTechnique) {
+        while (true){
+            int choiceTechniqueIndex = player.choiceTechnique();
+            if(0 <= choiceTechniqueIndex && choiceTechniqueIndex <= player.battlePokemon.techniques.length - 1) {
+                executeBattleTurn(player.battlePokemon.techniques[choiceTechniqueIndex], opChoiceTechnique);
+                return true;
+            }else if(choiceTechniqueIndex == player.battlePokemon.techniques.length) {
+                return false;
+            }else{
+                System.out.println("無効なコマンドです。");
+            }
+
+        }
+    }
+
+    void executeBattleTurn(Technique plChoiceTechnique, Technique opChoiceTechnique) {
+        if(plChoiceTechnique != null){
+            if(plChoiceTechnique.priority > opChoiceTechnique.priority){
+                player.battlePokemon.useTechnique(plChoiceTechnique, opponent.battlePokemon);
+                gameDisplay.gameDisplay(player, opponent);
+                checkNumRemPokemon(player, opponent);
+                opponent.battlePokemon.useTechnique(opChoiceTechnique, player.battlePokemon);
+                gameDisplay.gameDisplay(player, opponent);
+                checkNumRemPokemon(player, opponent);
+            }else if(plChoiceTechnique.priority < opChoiceTechnique.priority) {
+                opponent.battlePokemon.useTechnique(opChoiceTechnique, player.battlePokemon);
+                gameDisplay.gameDisplay(player, opponent);
+                checkNumRemPokemon(player, opponent);
+                player.battlePokemon.useTechnique(plChoiceTechnique, opponent.battlePokemon);
+                gameDisplay.gameDisplay(player, opponent);
+                checkNumRemPokemon(player, opponent);
+            }else if(plChoiceTechnique.priority == opChoiceTechnique.priority){
+                if(player.battlePokemon.sReal > opponent.battlePokemon.sReal){
+                    player.battlePokemon.useTechnique(plChoiceTechnique, opponent.battlePokemon);
+                    gameDisplay.gameDisplay(player, opponent);
+                    checkNumRemPokemon(player, opponent);
+                    opponent.battlePokemon.useTechnique(opChoiceTechnique, player.battlePokemon);
+                    gameDisplay.gameDisplay(player, opponent);
+                    checkNumRemPokemon(player, opponent);
+                }else{
+                    opponent.battlePokemon.useTechnique(opChoiceTechnique, player.battlePokemon);
+                    gameDisplay.gameDisplay(player, opponent);
+                    checkNumRemPokemon(player, opponent);
+                    player.battlePokemon.useTechnique(plChoiceTechnique, opponent.battlePokemon);
+                    gameDisplay.gameDisplay(player, opponent);
+                    checkNumRemPokemon(player, opponent);
+                }
+            }
+        }else{
+            opponent.battlePokemon.useTechnique(opChoiceTechnique, player.battlePokemon);
+            gameDisplay.gameDisplay(player, opponent);
+            checkNumRemPokemon(player, opponent);
+        }
+    }
+
+    void leechSeedEffect(Player player, Opponent opponent) {
+        if(player.battlePokemon.leechSeed == true){
+            player.battlePokemon.damaged((int)(player.battlePokemon.maxHP / 8));
+            gameDisplay.gameDisplay(player, opponent);
+            opponent.battlePokemon.recoverd((int)(player.battlePokemon.maxHP / 8));
+            gameDisplay.gameDisplay(player, opponent);
+        }else if(opponent.battlePokemon.leechSeed == true){
+            opponent.battlePokemon.damaged((int)(opponent.battlePokemon.maxHP / 8));
+            gameDisplay.gameDisplay(player, opponent);
+            player.battlePokemon.recoverd((int)(opponent.battlePokemon.maxHP / 8));
+            gameDisplay.gameDisplay(player, opponent);
+        }
+    }
+    public void checkAbnCon(Player player, Opponent opponent) {
+        if(player.battlePokemon.sReal > opponent.battlePokemon.sReal){
+            player.battlePokemon.abnCon();
+            gameDisplay.gameDisplay(player, opponent);
+            opponent.battlePokemon.abnCon();
+            gameDisplay.gameDisplay(player, opponent);
+        }else{
+            opponent.battlePokemon.abnCon();
+            gameDisplay.gameDisplay(player, opponent);
+            player.battlePokemon.abnCon();
+            gameDisplay.gameDisplay(player, opponent);
+        }
+    }
+
+    public void battleProcessing(Player player, Opponent opponent, GameDisplay gameDisplay) {
+        gameDisplay.gameDisplay(player, opponent);
+        System.out.println(opponent.trainerName + "が しょうぶを しかけてきた!");
+        System.out.println(opponent.trainerName + "は" + opponent.battlePokemon.pokemonName + "を くりだした!");
+        System.out.println("いけっ " + player.battlePokemon.pokemonName + "!");
+
+        while(true) {
+            initializeTurn(player, opponent);
+            Technique plChoiceTechnique = null, opChoiceTechnique = opponent.choiceTechnique(player.battlePokemon);
+
+            if (handlePlayerCommand(player, opponent, gameDisplay, opChoiceTechnique)) {
+                executeBattleTurn(plChoiceTechnique, opChoiceTechnique);
+            }
+
+            leechSeedEffect(player, opponent);
+            finalizeTurn(player, opponent);
+            checkAbnCon(player, opponent);
+            checkNumRemPokemon(player, opponent);
+        }
+    }
+
+    Battle() {
         //技リスト
         Technique tec1 = new Technique("ボルテッカー","物理", 120, 100, 15, true, "でんき", 0, "相手に与えたダメージの33%を自分も受ける。10%の確率で相手を『まひ』状態にする。");
         Technique tec2 = new Technique("アイアンテール","物理", 100, 75, 15, true, "はがね", 0, "30%の確率で相手の『ぼうぎょ』ランクを1段階下げる。");
@@ -128,151 +286,9 @@ public class Battle {
             );
 
         //トレーナー
-        Player player = new Player("レッド", new Pokemon[]{pokemon1, pokemon2, pokemon3});
-        Opponent opponent = new Opponent("グリーン", new Pokemon[]{pokemon4, pokemon5, pokemon6});
-
-        GameDisplay gameDisplay = new GameDisplay();
-        gameDisplay.gameDisplay(player, opponent);
-    
-        System.out.println(opponent.trainerName + "が しょうぶを しかけてきた!");
-        System.out.println(opponent.trainerName + "は" + opponent.battlePokemon.pokemonName + "を くりだした!");
-        System.out.println("いけっ " + player.battlePokemon.pokemonName + "!");
-
-        
-        while(true) {
-            player.battlePokemon.act = true;
-            opponent.battlePokemon.act = true;
-            player.battlePokemon.beforeAct = true;
-            player.battlePokemon.afterAct = false;
-            opponent.battlePokemon.beforeAct = true;
-            opponent.battlePokemon.afterAct = false;
-            Technique plChoiceTechnique;
-            Technique opChoiceTechnique = opponent.choiceTechnique();
-            if(opponent.battlePokemon.outrageTurn > 0){
-                opChoiceTechnique = tec20; //げきりん
-            }
-            boolean execute = false;
-            while(!execute){
-                String command1 = player.choiceCommand();
-                if(command1 == "にげる"){
-                    boolean runExecute = false;
-                    while(!runExecute){
-                        String command1_1 =player.runAway();
-                        if(command1_1 == "はい"){
-                            System.out.println("降参が 選ばれました");
-                            System.exit(0);
-                        }else if(command1_1 == "いいえ"){
-                            runExecute = true;
-                            break;
-                        }
-                    }
-                }else if(command1 == "ポケモン"){
-                    boolean pokemonExecute = false;
-                    while(!pokemonExecute) {
-                        int choicePokemonIndex = player.showParty();
-                        if(choicePokemonIndex == player.party.length){ //もどる
-                            pokemonExecute = true;
-                        }else if(0 <= choicePokemonIndex | choicePokemonIndex <= player.party.length - 1){
-                            Pokemon choicePokemon = player.party[choicePokemonIndex];
-                            boolean exchangeExcute = false;
-                            while(!exchangeExcute){
-                                String command2 = player.showPokemon(choicePokemon);//
-                                if(command2 == "いれかえる"){
-                                    pokemonExecute = true;
-                                    execute = true;
-                                    exchangeExcute = true;
-                                    player.exchange(choicePokemon);
-                                    gameDisplay.gameDisplay(player, opponent);
-                                    opponent.battlePokemon.useTechnique(opChoiceTechnique, player.battlePokemon);
-                                    gameDisplay.gameDisplay(player, opponent);
-                                    checkNumRemPokemon(player, opponent);
-                                }else if(command2 == "もどる"){
-                                    exchangeExcute = true;
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                }else if(command1 == "たたかう"){
-                    boolean choiceExecute = false;
-                    while(!choiceExecute){
-                        int techniqueIndex = player.choiceTechnique();
-                        if(techniqueIndex == 4){
-                            choiceExecute = true;
-                        }else if(0 <= techniqueIndex && techniqueIndex <= player.battlePokemon.techniques.length){
-                            choiceExecute = true;
-                            execute = true;
-                            plChoiceTechnique = player.battlePokemon.techniques[techniqueIndex];
-                            if(plChoiceTechnique.priority > opChoiceTechnique.priority){
-                                player.battlePokemon.useTechnique(plChoiceTechnique, opponent.battlePokemon);
-                                gameDisplay.gameDisplay(player, opponent);
-                                checkNumRemPokemon(player, opponent);
-                                opponent.battlePokemon.useTechnique(opChoiceTechnique, player.battlePokemon);
-                                gameDisplay.gameDisplay(player, opponent);
-                                checkNumRemPokemon(player, opponent);
-                            }else if(plChoiceTechnique.priority < opChoiceTechnique.priority) {
-                                opponent.battlePokemon.useTechnique(opChoiceTechnique, player.battlePokemon);
-                                gameDisplay.gameDisplay(player, opponent);
-                                checkNumRemPokemon(player, opponent);
-                                player.battlePokemon.useTechnique(plChoiceTechnique, opponent.battlePokemon);
-                                gameDisplay.gameDisplay(player, opponent);
-                                checkNumRemPokemon(player, opponent);
-                            }else if(plChoiceTechnique.priority == opChoiceTechnique.priority){
-                                if(player.battlePokemon.sReal > opponent.battlePokemon.sReal){
-                                    player.battlePokemon.useTechnique(plChoiceTechnique, opponent.battlePokemon);
-                                    gameDisplay.gameDisplay(player, opponent);
-                                    checkNumRemPokemon(player, opponent);
-                                    opponent.battlePokemon.useTechnique(opChoiceTechnique, player.battlePokemon);
-                                    gameDisplay.gameDisplay(player, opponent);
-                                    checkNumRemPokemon(player, opponent);
-                                }else{
-                                    opponent.battlePokemon.useTechnique(opChoiceTechnique, player.battlePokemon);
-                                    gameDisplay.gameDisplay(player, opponent);
-                                    checkNumRemPokemon(player, opponent);
-                                    player.battlePokemon.useTechnique(plChoiceTechnique, opponent.battlePokemon);
-                                    gameDisplay.gameDisplay(player, opponent);
-                                    checkNumRemPokemon(player, opponent);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            if(player.battlePokemon.leechSeed == true){
-                player.battlePokemon.damaged((int)(player.battlePokemon.maxHP / 8));
-                gameDisplay.gameDisplay(player, opponent);
-                opponent.battlePokemon.recoverd((int)(player.battlePokemon.maxHP / 8));
-                gameDisplay.gameDisplay(player, opponent);
-            }else if(opponent.battlePokemon.leechSeed == true){
-                opponent.battlePokemon.damaged((int)(opponent.battlePokemon.maxHP / 8));
-                gameDisplay.gameDisplay(player, opponent);
-                player.battlePokemon.recoverd((int)(opponent.battlePokemon.maxHP / 8));
-                gameDisplay.gameDisplay(player, opponent);
-            }
-            player.battlePokemon.beforeAct = false;
-            player.battlePokemon.afterAct = true;
-            opponent.battlePokemon.beforeAct = false;
-            opponent.battlePokemon.afterAct = true;
-            if(player.battlePokemon.sReal > opponent.battlePokemon.sReal){
-                player.battlePokemon.abnCon();
-                gameDisplay.gameDisplay(player, opponent);
-                opponent.battlePokemon.abnCon();
-                gameDisplay.gameDisplay(player, opponent);
-            }else{
-                opponent.battlePokemon.abnCon();
-                gameDisplay.gameDisplay(player, opponent);
-                player.battlePokemon.abnCon();
-                gameDisplay.gameDisplay(player, opponent);
-            }
-            if(player.battlePokemon.conTurn > 0) {
-                player.battlePokemon.conTurn --;
-            }
-            if(opponent.battlePokemon.conTurn > 0) {
-                opponent.battlePokemon.conTurn --;
-            }
-            checkNumRemPokemon(player, opponent);
-        }
+        player = new Player("レッド", new Pokemon[]{pokemon1, pokemon2, pokemon3});
+        opponent = new Opponent("グリーン", new Pokemon[]{pokemon4, pokemon5, pokemon6});
+        gameDisplay = new GameDisplay();
     }
+
 }
-
-

@@ -6,6 +6,13 @@
     "configurations": [
         {
             "type": "java",
+            "name": "Main",
+            "request": "launch",
+            "mainClass": "jp.ac.uryukyu.ie.e245708.Main",
+            "projectName": "app"
+        },
+        {
+            "type": "java",
             "name": "Battle",
             "request": "launch",
             "mainClass": "jp.ac.uryukyu.ie.e245708.Battle",

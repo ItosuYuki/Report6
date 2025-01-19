@@ -28,6 +28,7 @@ public class Pokemon {
     boolean afterAct = false;                           //行動後
     boolean leechSeed = false;                          //やどりぎ状態
     int outrageTurn = 0;                                //げきりんターン
+    Technique lastUsedTechnique;                        //最後に使用した技
     int elaTurn = 1;                                    //登場してからの経過ターン
     //乱数生成
     Random randomGenerator = new Random();
@@ -56,16 +57,21 @@ public class Pokemon {
             this.abnCon = "";
         }
         if(this.conTurn > 0){ //混乱時の処理
-            double pwrRand = (randomGenerator.nextInt(15) + 85) / 100.0;
-            int rand = randomGenerator.nextInt(2);
-            System.out.println(this.pokemonName + "はこんらんしている!");
-            if(rand < 1){
-                int damage = (int)((int)((int)((int)(this.level * 2 / 5 + 2) * choiceTechnique.pwr * this.aReal / this.bReal) / 50 + 2) * pwrRand);
-                if(abnCon ==  "やけど"){ //やけど時ダメージ1/2
-                    damage = damage / 2;
+            conTurn --;
+            if(conTurn == 0){
+                System.out.println(pokemonName + "のこんらんがとけた!");
+            }else{
+                double pwrRand = (randomGenerator.nextInt(15) + 85) / 100.0;
+                int rand = randomGenerator.nextInt(2);
+                System.out.println(this.pokemonName + "はこんらんしている!");
+                if(rand < 1){
+                    int damage = (int)((int)((int)((int)(this.level * 2 / 5 + 2) * choiceTechnique.pwr * this.aReal / this.bReal) / 50 + 2) * pwrRand);
+                    if(abnCon ==  "やけど"){ //やけど時ダメージ1/2
+                        damage = damage / 2;
+                    }
+                    this.damaged(damage);
+                    System.out.println("わけも わからず じぶんを こうげきした!");
                 }
-                this.damaged(damage);
-                System.out.println("わけも わからず じぶんを こうげきした!");
             }
         }
         if(this.act){ //行動可能か判定
@@ -79,6 +85,7 @@ public class Pokemon {
                     target.abnCon = "";
                     System.out.println(target.pokemonName + "のこおりがとけた");
                 }
+                lastUsedTechnique = choiceTechnique;
             }else{
                 System.out.println(target.pokemonName + "には あたらなかった!");
             }
