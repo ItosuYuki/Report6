@@ -9,13 +9,4 @@ public abstract class Trainer {
 
     //乱数生成
     Random randomGenerator = new Random();
-/*  コンストラクタ例
-    Trainer(String trainerName, Pokemon[] party){
-        this.trainerName = trainerName;
-        this.party = party;
-        this.battlePokemon = party[0];
-        this.numRemPokemon = party.length;
-    }
-*/
-    //abstract Technique choiceTechnique();
 }

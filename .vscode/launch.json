@@ -6,6 +6,20 @@
     "configurations": [
         {
             "type": "java",
+            "name": "PokemonTest",
+            "request": "launch",
+            "mainClass": "jp.ac.uryukyu.ie.e245708.PokemonTest",
+            "projectName": "app"
+        },
+        {
+            "type": "java",
+            "name": "CommandSelection",
+            "request": "launch",
+            "mainClass": "jp.ac.uryukyu.ie.e245708.CommandSelection",
+            "projectName": "app"
+        },
+        {
+            "type": "java",
             "name": "Main",
             "request": "launch",
             "mainClass": "jp.ac.uryukyu.ie.e245708.Main",

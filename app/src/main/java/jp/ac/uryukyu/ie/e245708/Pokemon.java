@@ -35,6 +35,13 @@ public class Pokemon {
 
     TypeMatchupCalculator calculator = new TypeMatchupCalculator();
 
+    /**
+     * 自分のHPを減らすメソッド。
+     * 相手の技を受けた時や状態異常、反動ダメージ、やどりぎのタネの処理の際に用いる。
+     * HPが0になるとひんしになる。
+     * 
+     * @param damage 受けるダメージ
+     */
     void damaged(int damage){
         this.hReal -= damage;
         if(hReal <= 0){
@@ -44,6 +51,12 @@ public class Pokemon {
         }
     }
 
+    /**
+     * 自分のHPを回復するメソッす。
+     * 現時点ではやどりぎのタネでのみ用いる。
+     * 
+     * @param recover 回復量
+     */
     void recoverd(int recover){
         this.hReal += recover;
         if(hReal >= maxHP){
@@ -51,8 +64,17 @@ public class Pokemon {
         }
     }
 
+    /**
+     * 技を使用するメソッド。
+     * 状態異常や混乱の処理を行い、その後相手に技を使用する。
+     * 混乱時はタイプなしで威力40の物理攻撃を自分に行う。
+     * 
+     * @param choiceTechnique 選択した技
+     * @param target 技を発動する対象のポケモン
+     */
     public void useTechnique(Technique choiceTechnique, Pokemon target) {
-        this.abnCon();
+        this.rankCom();
+        this.abnCon(); //状態異常の処理
         if(choiceTechnique.effect == "相手に与えたダメージの33%を自分も受ける。10%の確率で相手を『やけど』状態にする。自分が『こおり』状態の時でも使う事ができ、使うと『こおり』状態が治る。"){
             this.abnCon = "";
         }
@@ -64,11 +86,8 @@ public class Pokemon {
                 double pwrRand = (randomGenerator.nextInt(15) + 85) / 100.0;
                 int rand = randomGenerator.nextInt(2);
                 System.out.println(this.pokemonName + "はこんらんしている!");
-                if(rand < 1){
-                    int damage = (int)((int)((int)((int)(this.level * 2 / 5 + 2) * choiceTechnique.pwr * this.aReal / this.bReal) / 50 + 2) * pwrRand);
-                    if(abnCon ==  "やけど"){ //やけど時ダメージ1/2
-                        damage = damage / 2;
-                    }
+                if(rand < 1){ //3分の1で混乱
+                    int damage = (int)((int)((int)((int)(this.level * 2 / 5 + 2) * 40 * this.aReal / this.bReal) / 50 + 2) * pwrRand);
                     this.damaged(damage);
                     System.out.println("わけも わからず じぶんを こうげきした!");
                 }
@@ -91,10 +110,23 @@ public class Pokemon {
             }
             
         }
+        this.rankCom();
         this.act = false;
         this.elaTurn ++;
     }
 
+    /**
+     * ダメージを計算するメソッド。
+     * ダメージ計算式
+     * ダメージ=攻撃側のレベル×2÷5+2→切り捨て
+     * ×物理技(特殊技)の威力×攻撃側のこうげき(とくこう)÷防御側のぼうぎょ(とくぼう)→切り捨て
+     * ÷50+2→切り捨て×乱数(0.85, 0.86, …… ,0.99, 1.00 のどれか)→切り捨て
+     * ×タイプ一致補正×相性補正
+     * 
+     * @param technique 使用する技
+     * @param target 技を発動する対象のポケモン
+     * @return ダメージ量
+     */
     public int calcDamage(Technique technique, Pokemon target) {
         double typeMatcCom = 1; //タイプ一致補正
         double matchup = calculator.calcMatchup(technique.type, target.types);
@@ -117,20 +149,29 @@ public class Pokemon {
                 damage = (int)((int)((int)((int)(this.level * 2 / 5 + 2) * technique.pwr * this.cReal / target.dReal) / 50 + 2) * pwrRand2 * typeMatcCom * matchup);
                 break;  
         }
-        if(matchup > 1.0){
-            System.out.println("効果はバツグンだ!");
-        }else if(0 < matchup && matchup < 1.0){
-            System.out.println("効果は今ひとつのようだ");
-        }else if(matchup == 0){
-            System.out.println("効果がないようだ...");
-        }
-        if(target.hReal <= damage) {
-            damage = target.hReal;
+        if(this.act == true){
+            if(matchup > 1.0){
+                System.out.println("効果はバツグンだ!");
+            }else if(0 < matchup && matchup < 1.0){
+                System.out.println("効果は今ひとつのようだ");
+            }else if(matchup == 0){
+                System.out.println("効果がないようだ...");
+            }
+            if(target.hReal <= damage) {
+                damage = target.hReal;
+            }
         }
         return damage;
     }
 
-    //追加効果
+    //処理数の関係で50行を超えてしまったメソッド
+    /**
+     * 追加効果を発生させるメソッド。
+     * 
+     * @param effect 追加効果
+     * @param damage 相手に与えたダメージ
+     * @param target 技を発動する対象のポケモン
+     */
     public void actEffect(String effect, int damage, Pokemon target) {
         int rand = randomGenerator.nextInt(99);
         int anoRand = randomGenerator.nextInt(99);
@@ -183,11 +224,9 @@ public class Pokemon {
                 this.damaged((int)(damage * 0.33));
                 break;
             case "20%の確率で相手をひるませる。":
-                if(rand >= 80){
-                    if(target.act == true){
+                if(rand >= 80 && target.act == true){
                     target.act = false;
                     System.out.println(target.pokemonName + "は ひるんで うごけない!");
-                    }
                 }
                 break;
             case "使用後、毎ターン、相手のHPを最大HPの1/8ずつ減らし、その分自分のHPを回復させる。自分は交代しても効果が引き継ぐ。草タイプのポケモンには無効。":
@@ -203,11 +242,9 @@ public class Pokemon {
                     target.abnCon = "こおり";
                     System.out.println(target.pokemonName + "は こおりついた!");
                 }
-                if(anoRand >= 90){
-                    if(target.act == true){
+                if(anoRand >= 90 && target.act == true){
                     target.act = false;
                     System.out.println(target.pokemonName + "は ひるんで うごけない!");
-                    }
                 }
                 break;
             case "2～3ターン連続で攻撃し、その後自分は1～4ターンの間『こんらん』状態になる。":
@@ -238,6 +275,12 @@ public class Pokemon {
         }
     }
 
+    //処理数の関係で50行を超えてしまったメソッド
+    /**
+     * 状態異常の効果を処理するメソッド。
+     * まひ・こおり・ねむりは技発動前に処理し、
+     * やけど・どく・もうどくはターン終了時に処理する。
+     */
     void abnCon(){
         switch(this.abnCon){
             case "まひ":
@@ -282,23 +325,32 @@ public class Pokemon {
                 break;
             case "ねむり":
                 if(beforeAct == true){
-                    if(this.sleepCount == 0){
-                    this.sleepCount = randomGenerator.nextInt(2) + 2; //ねむりカウント
-                    }
-                    if(this.sleepCount == 0){
-                        this.abnCon = "";
-                        System.out.println(this.pokemonName + "はめをさました!");
-                    }else{
-                        this.act = false;//行動不能
+                    if(this.sleepCount > 0){
+                        this.sleepCount --;
+                        if(this.sleepCount == 0){
+                            this.abnCon = "";
+                            System.out.println(this.pokemonName + "はめをさました!");
+                        }else{
+                            this.act = false;//行動不能
                         System.out.println(this.pokemonName + "はぐうぐうねむっている");
-                        this.sleepCount -= 1;
+                        }
+                    }else if(this.sleepCount == 0){
+                        this.sleepCount = randomGenerator.nextInt(2) + 2; //ねむりカウント
                     }
                 }
                 break;
+            }
         }
-    }
 
-    private int calcRank(int rank, int value) {
+    /**
+     * ランクを計算するメソッド。
+     * 最大値は+6、最小値は-6
+     * 
+     * @param rank 現在のランク
+     * @param value ランクの変化量
+     * @return 変化後のランク
+     */
+    public int calcRank(int rank, int value) {
         rank += value;
         if (rank > 6) {
             rank = 6;
@@ -308,7 +360,14 @@ public class Pokemon {
         return rank;
     }
     
-    private void printRankChangeMessage(String statName, String pokemonName, int value) {
+    /**
+     * ランクの変化量に応じてメッセージを出力するメソッド。
+     * 
+     * @param statName 変化したステータス名
+     * @param pokemonName ランクが変化したポケモンの名前
+     * @param value ランクの変化量
+     */
+    public void printRankChangeMessage(String statName, String pokemonName, int value) {
         if (value == 1) {
             System.out.println(pokemonName + "の " + statName + "が あがった");
         } else if (value == 2) {
@@ -325,49 +384,87 @@ public class Pokemon {
             System.out.println(pokemonName + "の " + statName + "が がくーんと さがった");
         }
     }
-    
+
+    /**
+     * こうげきランクを計算し、メッセージを出力するメソッド。
+     * 
+     * @param value ランクの変化量
+     */
     public void aRankCalc(int value) {
         this.aRank = calcRank(this.aRank, value);
         calculateRealValue(aRank, aReal);
         printRankChangeMessage("こうげき", this.pokemonName, value);
     }
     
+    /**
+     * ぼうぎょランクを計算し、メッセージを出力するメソッド。
+     * 
+     * @param value ランクの変化量
+     */
     public void bRankCalc(int value) {
         this.bRank = calcRank(this.bRank, value);
         calculateRealValue(bRank, bReal);
         printRankChangeMessage("ぼうぎょ", this.pokemonName, value);
     }
 
+    /**
+     * とくこうランクを計算し、メッセージを出力するメソッド。
+     * 
+     * @param value ランクの変化量
+     */
     public void cRankCalc(int value) {
         this.cRank = calcRank(this.cRank, value);
         calculateRealValue(cRank, cReal);
         printRankChangeMessage("とくこう", this.pokemonName, value);
     }
 
+    /**
+     * とくぼうランクを計算し、メッセージを出力するメソッド。
+     * 
+     * @param value ランクの変化量
+     */
     public void dRankCalc(int value) {
         this.dRank = calcRank(this.dRank, value);
         calculateRealValue(dRank, dReal);
         printRankChangeMessage("とくぼう", this.pokemonName, value);
     }
 
+    /**
+     * すばやさランクを計算し、メッセージを出力するメソッド。
+     * 
+     * @param value ランクの変化量
+     */
     public void sRankCalc(int value) {
         this.sRank = calcRank(this.sRank, value);
         calculateRealValue(sRank, sReal);
         printRankChangeMessage("すばやさ", this.pokemonName, value);
     }
 
+    /**
+     * めいちゅうランクを計算し、メッセージを出力するメソッド。
+     * 
+     * @param value ランクの変化量
+     */
     public void acRankCalc(int value) {
         this.acRank = calcRank(this.acRank, value);
         printRankChangeMessage("めいちゅうりつ", this.pokemonName, value);
     }
 
+    /**
+     * かいひりつランクを計算し、メッセージを出力するメソッド。
+     * 
+     * @param value ランクの変化量
+     */
     public void evRankCalc(int value) {
         this.evRank = calcRank(this.evRank, value);
         printRankChangeMessage("かいひりつ", this.pokemonName, value);
     }
     
 
-    //実数値計算　ポケモン行動後に実行する
+    /**
+     * ランクに応じて実数値を計算するメソッド。
+     * 技使用前、使用後、ターン開始時に発動する。
+     */
     public void rankCom() {
         this.aReal = calculateRealValue(aRank, aReal);
         this.bReal = calculateRealValue(bRank, bReal);
@@ -376,16 +473,30 @@ public class Pokemon {
         this.sReal = calculateRealValue(sRank, sReal);
     }
     
-    public int calculateRealValue(int rank, double real) {
+    /**
+     * ランクに応じて実数値を計算するメソッド。
+     * 
+     * @param rank ランク
+     * @param real 実数値
+     * @return 実数値
+     */
+    public int calculateRealValue(int rank, int real) {
         if (rank > 0) {
-            return (int)(real * (2 + rank) / 2);
+            return (int)(real * (2.0 + rank) / 2.0);
         } else if (rank < 0) {
-            return (int)(real * 2 / (2 - rank));
+            return (int)(real * 2.0 / (2.0 - rank));
         }
         return (int)real;  // rankが0の場合、変更なし
     }
 
-    //命中率計算
+    /**
+     * 命中したかを判定するメソッド。
+     * 
+     * @param acc 技の命中率
+     * @param acRank 技を使用するポケモンのめいちゅうランク
+     * @param evRank 技を受けるポケモンのかいひランク
+     * @return trueなら命中、falseなら回避
+     */
     public boolean isHit(int acc, int acRank, int evRank){
         double accCom = 1;
         if(acRank - evRank > 0){
@@ -462,7 +573,13 @@ public class Pokemon {
         addEffectiveness("ドラゴン", new String[]{"フェアリー"}, 0.0);
     }
 
-    // 効果をマップに追加するヘルパーメソッド
+    /**
+     * 効果をマップに追加するメソッド。
+     * 
+     * @param techniqueType 技のタイプ
+     * @param targetTypes 技を受ける対象のポケモンのタイプ
+     * @param multiplier 相性倍率
+     */
     private static void addEffectiveness(String techniqueType, String[] targetTypes, double multiplier) {
         typeEffectiveness.putIfAbsent(techniqueType, new HashMap<>());
         Map<String, Double> targetMap = typeEffectiveness.get(techniqueType);
@@ -471,7 +588,13 @@ public class Pokemon {
         }
     }
 
-    // 相性倍率を計算するメソッド
+    /**
+     * 相性倍率を計算するメソッド。
+     * 
+     * @param techniqueType 技のタイプ
+     * @param targetTypes 技を受けるポケモンのタイプ
+     * @return 相性倍率
+     */
     public double calcMatchup(String techniqueType, String[] targetTypes) {
         double mag = 1.0; // 初期倍率
         for (String targetType : targetTypes) {

@@ -5,7 +5,6 @@ public class GameDisplay {
     private JFrame frame;
     private JTextArea textArea;
 
-    // コンストラクタでウィンドウをセットアップ
     public GameDisplay() {
         frame = new JFrame("Game Display");
         textArea = new JTextArea();
@@ -26,17 +25,30 @@ public class GameDisplay {
         frame.setLocationRelativeTo(null);
     }
 
-    // テキストを追加表示するメソッド
+    
+    /** 
+     * テキストを追加表示するメソッド。
+     * 
+     * @param text　表示するテキスト
+    */
     public void appendText(String text) {
         textArea.append(text + "\n"); // テキストを追加し改行
     }
 
-    // テキストエリアをクリアするメソッド
+    /**
+     * テキストエリアをクリアするメソッド。
+     */
     public void clearText() {
         textArea.setText(""); // テキストを空にする
     }
 
-    //ゲーム画面を出力するメソッド
+    /**
+     * ゲーム画面を出力するメソッド。
+     * 場のポケモンの名前・レベル・HP・最大HP・状態異常を表示する。
+     * 
+     * @param player プレイヤー
+     * @param opponent 相手
+     */
     public void gameDisplay(Player player, Opponent opponent){
         clearText();
         appendText(opponent.battlePokemon.pokemonName + " lv." + opponent.battlePokemon.level);

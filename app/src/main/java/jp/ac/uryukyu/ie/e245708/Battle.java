@@ -5,7 +5,12 @@ public class Battle {
     Opponent opponent;
     GameDisplay gameDisplay;
 
-
+    /** 
+     * ターンの最初に設定する項目
+     * 
+     * @param player　プレイヤー
+     * @param opponent 相手
+    */
     void initializeTurn(Player player, Opponent opponent) {
         player.battlePokemon.act = true;
         opponent.battlePokemon.act = true;
@@ -15,13 +20,28 @@ public class Battle {
         opponent.battlePokemon.afterAct = false;
     }
 
+    /** 
+     * ターンの最後に設定する項目
+     * 
+     * @param player　プレイヤー
+     * @param opponent 相手
+    */
     void finalizeTurn(Player player, Opponent opponent) {
         player.battlePokemon.beforeAct = false;
         player.battlePokemon.afterAct = true;
         opponent.battlePokemon.beforeAct = false;
         opponent.battlePokemon.afterAct = true;
+        player.battlePokemon.rankCom();
+        opponent.battlePokemon.rankCom();
     }
 
+    /** 
+     * 場のポケモンが死んだ場合に交換や勝敗判定を行うメソッド。
+     * 残りポケモン数が1以上の時は交換し、残りポケモンが0になると勝敗判定をする。
+     * 
+     * @param player　プレイヤー
+     * @param opponent 相手
+    */
     public void checkNumRemPokemon(Player player, Opponent opponent) {
         if(player.battlePokemon.abnCon == "ひんし"){
             player.battlePokemon.act = false;
@@ -54,6 +74,14 @@ public class Battle {
         }   
     }
 
+    /** 
+     * プレイヤーの行動を決めるメソッド。
+     * にげるやいれかえるを行うとtrueを返し、技を選ぶとfalseを返す。
+     * 
+     * @param player　プレイヤー
+     * @param opponent 相手
+     * @param gameDisplay ゲーム画面
+    */
     boolean handlePlayerCommand(Player player, Opponent opponent, GameDisplay gameDisplay, Technique opChoiceTechnique) {
         while (true) {
             String command = player.choiceCommand();
@@ -63,6 +91,13 @@ public class Battle {
         }
     }
 
+    /** 
+     * にげるコマンドを実行するメソッド。
+     * はいを選ぶと降参し、バトルが終了する。
+     * いいえを選ぶとhandlePlayerCommandまでもどる。
+     * 
+     * @param player　プレイヤー
+    */
     boolean confirmRunAway(Player player) {
         while (true) {
             String confirm = player.runAway();
@@ -73,11 +108,21 @@ public class Battle {
         }
     }
 
+    /** 
+     * いれかえるコマンドを実行するメソッド。
+     * 自分の手持ちポケモンを映し、選んだポケモンのステータスを表示したり、いれかえることができる。
+     * もどるを選択するとhandlePlayerCommandまでもどる。
+     * 
+     * @param player　プレイヤー
+     * @param opponent 相手
+     * @param　gameDisplay ゲーム画面
+     * @param　opChoiceTechnique 相手が選択した技
+    */
     boolean handlePokemonSwitch(Player player, Opponent opponent, GameDisplay gameDisplay, Technique opChoiceTechnique) {
         while (true) {
             int choicePokemonIndex = player.showParty();
             if (choicePokemonIndex == player.party.length) return false; // 戻る
-            if(0 <= choicePokemonIndex | choicePokemonIndex <= player.party.length - 1){
+            if(0 <= choicePokemonIndex && choicePokemonIndex <= player.party.length - 1){
                 Pokemon choicePokemon = player.party[choicePokemonIndex];
                 while (true) {
                     String command = player.showPokemon(choicePokemon);
@@ -93,6 +138,15 @@ public class Battle {
         }
     }
 
+    /** 
+     * 実行したい技を選択するメソッド。
+     * 自分の場のポケモンの技一覧を表示し、技を選択する。
+     * もどるを選択するとhandlePlayerCommandまでもどる。
+     * 
+     * @param player　プレイヤー
+     * @param opponent 相手
+     * @param　opChoiceTechnique 相手が選択した技
+    */
     boolean handleTechniqueSwitch(Player player, Opponent opponent, Technique opChoiceTechnique) {
         while (true){
             int choiceTechniqueIndex = player.choiceTechnique();
@@ -108,6 +162,14 @@ public class Battle {
         }
     }
 
+    /** 
+     * 自分と相手が技を使用した際に行動順を決めるメソッド。
+     * 優先度が高い方が先に行動し、優先度が同じ場合にはポケモンのすばやさが高い方が先に行動する。
+     * こちらがいれかえを行った場合は相手の技のみ発動する。
+     * 
+     * @param plChoiceTechnique　プレイヤーが選択した技
+     * @param opChoiceTechnique 相手が選択した技
+    */
     void executeBattleTurn(Technique plChoiceTechnique, Technique opChoiceTechnique) {
         if(plChoiceTechnique != null){
             if(plChoiceTechnique.priority > opChoiceTechnique.priority){
@@ -148,33 +210,72 @@ public class Battle {
         }
     }
 
+    /** 
+     * やどりぎのタネの効果を実行するメソッド。
+     * 
+     * @param player　プレイヤー
+     * @param opponent 相手
+    */
     void leechSeedEffect(Player player, Opponent opponent) {
         if(player.battlePokemon.leechSeed == true){
             player.battlePokemon.damaged((int)(player.battlePokemon.maxHP / 8));
             gameDisplay.gameDisplay(player, opponent);
+            checkNumRemPokemon(player, opponent);
             opponent.battlePokemon.recoverd((int)(player.battlePokemon.maxHP / 8));
             gameDisplay.gameDisplay(player, opponent);
+            checkNumRemPokemon(player, opponent);
         }else if(opponent.battlePokemon.leechSeed == true){
             opponent.battlePokemon.damaged((int)(opponent.battlePokemon.maxHP / 8));
             gameDisplay.gameDisplay(player, opponent);
+            checkNumRemPokemon(player, opponent);
             player.battlePokemon.recoverd((int)(opponent.battlePokemon.maxHP / 8));
             gameDisplay.gameDisplay(player, opponent);
+            checkNumRemPokemon(player, opponent);
         }
     }
+
+    /** 
+     * 場のポケモンの状態異常の効果を発動させるメソッド。
+     * ターン終了時に実行し、やけど、どく、もうどくの処理を行う。
+     * 
+     * @param player　プレイヤー
+     * @param opponent 相手
+    */
     public void checkAbnCon(Player player, Opponent opponent) {
         if(player.battlePokemon.sReal > opponent.battlePokemon.sReal){
             player.battlePokemon.abnCon();
             gameDisplay.gameDisplay(player, opponent);
+            checkNumRemPokemon(player, opponent);
             opponent.battlePokemon.abnCon();
             gameDisplay.gameDisplay(player, opponent);
+            checkNumRemPokemon(player, opponent);
         }else{
             opponent.battlePokemon.abnCon();
             gameDisplay.gameDisplay(player, opponent);
+            checkNumRemPokemon(player, opponent);
             player.battlePokemon.abnCon();
             gameDisplay.gameDisplay(player, opponent);
+            checkNumRemPokemon(player, opponent);
         }
     }
 
+    /** 
+     * バトルを実行するメソッド。
+     * 最初にゲーム画面やメッセージを出力し、その後ターン処理を行う。
+     * 1.選択した技やactの初期化
+     * 2.コマンド選択
+     * 3.にげる
+     * 4.いれかえる
+     * 5.技
+     * 6.やどりぎのタネ
+     * 7.actの変更
+     * 8.状態異常の処理
+     * の順でターン処理を行う。
+     * 
+     * @param player　プレイヤー
+     * @param opponent 相手
+     * @param gameDisplay ゲーム画面
+    */
     public void battleProcessing(Player player, Opponent opponent, GameDisplay gameDisplay) {
         gameDisplay.gameDisplay(player, opponent);
         System.out.println(opponent.trainerName + "が しょうぶを しかけてきた!");
@@ -182,8 +283,8 @@ public class Battle {
         System.out.println("いけっ " + player.battlePokemon.pokemonName + "!");
 
         while(true) {
-            initializeTurn(player, opponent);
             Technique plChoiceTechnique = null, opChoiceTechnique = opponent.choiceTechnique(player.battlePokemon);
+            initializeTurn(player, opponent);
 
             if (handlePlayerCommand(player, opponent, gameDisplay, opChoiceTechnique)) {
                 executeBattleTurn(plChoiceTechnique, opChoiceTechnique);
@@ -192,7 +293,6 @@ public class Battle {
             leechSeedEffect(player, opponent);
             finalizeTurn(player, opponent);
             checkAbnCon(player, opponent);
-            checkNumRemPokemon(player, opponent);
         }
     }
 
